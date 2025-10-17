@@ -1,0 +1,60 @@
+
+services:
+  redis:
+    image: redis:8.2.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.9.4
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:8.1.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092, PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT, PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  # -----------------------------------------------------------------------------------------
+  api:
+    build: .
+    container_name: sec_kill_proj
+    depends_on:
+      - redis
+      - kafka
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+    command: ["uv", "run", "startup.py"]
+    environment:
+      REDIS_HOST: redis
+      KAFKA_HOST: kafka:29092
+      PYTHONUNBUFFERED: 1
+
+  consumer:
+    build: .
+    container_name: consumer
+    depends_on:
+      - kafka
+    volumes:
+      - ./app:/app
+    command: ["python", "-u", "app/consumer/order_consumer.py"]
+    environment:
+      KAFKA_HOST: kafka:29092
+      PYTHONUNBUFFERED: 1
