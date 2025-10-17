@@ -1,7 +1,6 @@
 import os
 from typing import Optional
 
-
 class AppConfig:
     DEBUG: bool = os.getenv('DEBUG', 'False').lower() == 'true'
 

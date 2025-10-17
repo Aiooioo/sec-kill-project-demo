@@ -36,3 +36,5 @@ RUN uv sync --no-editable
 RUN uv cache clean
 
 EXPOSE 8000
+
+CMD ["uv", "run", "startup.py"]
