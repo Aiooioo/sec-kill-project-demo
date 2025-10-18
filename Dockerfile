@@ -21,12 +21,14 @@ ENV UV_LINK_MODE=copy
 ENV UV_SYSTEM_PYTHON=1
 ENV UV_DEFAULT_INDEX="https://mirrors.aliyun.com/pypi/simple"
 
-COPY ./app/uv.lock ./app/pyproject.toml /app/
+COPY uv.lock pyproject.toml /app/
 
 # 第一次 sync：基于锁文件安装依赖，禁用可编辑模式，冻结版本
 RUN uv sync --frozen --no-editable
 
-COPY ./app /app
+COPY main.py startup.py /app/
+COPY ./static /app/static
+COPY ./app /app/app
 
 RUN uv lock
 

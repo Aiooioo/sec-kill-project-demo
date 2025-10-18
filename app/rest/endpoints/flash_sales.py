@@ -27,8 +27,13 @@ async def purchase(
         flash_sales_service: FlashSalesService = Depends(get_flash_sales_service)
 ):
     try:
-        flash_sales_service.flash_purchase(request.user_id, request.product_id, request.amount)
-    except:
-        raise HTTPException(status_code=500)
+        result = flash_sales_service.flash_purchase(request.user_id, request.product_id, request.amount)
+
+        if hasattr(result, 'err'):
+            raise HTTPException(status_code=500, detail=result.err)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
     return success_response(data=True)

@@ -1,6 +1,6 @@
 /__pycache__/*
 
 
-app/logs/app*.log
-/app/.venv/
+/logs/app.log
+.venv/*
 /.idea/

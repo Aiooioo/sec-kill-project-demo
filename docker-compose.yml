@@ -40,7 +40,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app
+      - ./app:/app/app
     command: ["uv", "run", "startup.py"]
     environment:
       REDIS_HOST: redis
@@ -53,7 +53,7 @@ services:
     depends_on:
       - kafka
     volumes:
-      - ./app:/app
+      - ./app:/app/app
     command: ["python", "-u", "app/consumer/order_consumer.py"]
     environment:
       KAFKA_HOST: kafka:29092
