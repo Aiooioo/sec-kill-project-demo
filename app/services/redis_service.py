@@ -1,5 +1,6 @@
 import redis
 from app.core import config
+from app.models.dto.dto_sales import ProductInventory
 
 
 class RedisService:
@@ -13,8 +14,13 @@ class RedisService:
             decode_responses=True
         )
 
-    def preload(self):
-        pass
+    def preload(self, inventories: list[ProductInventory]) -> None:
+        """
+        缓存预热
+        :param inventories: 商品信息
+        """
+        for product in inventories:
+            pass
 
     def get(self, key: str, level: str = "redis") -> str:
         pass
@@ -24,6 +30,12 @@ class RedisService:
 
     def invalidate(self, key: str, level: str = "redis") -> None:
         pass
+
+    def reduce(self, key: str, amount: int = 1):
+        return self.client.decr(key, amount)
+
+    def increase(self, key: str, amount: int = 1):
+        return self.client.incr(key, amount)
 
 
 def get_redis_service() -> RedisService:
