@@ -1,26 +1,14 @@
 import logging
 from fastapi import APIRouter, Body, Path, HTTPException, Depends
-from pydantic import BaseModel, Field
+
 from app.services.redis_service import RedisService, get_redis_service
+from app.models.dto.dto_sales import UserPurchaseRequest
 from app.models.http.base_response import SuccessResponse
 from app.rest import success_response
 
 router = APIRouter()
 
 logger = logging.getLogger(__name__)
-
-
-class UserPurchaseRequest(BaseModel):
-    user_id: int = Field(..., description="User ID")
-
-    amount: int = Field(..., description="Product amount in this purchase")
-
-    model_config = {
-        "extra": "forbid",
-
-        "str_strip_whitespace": True
-    }
-
 
 @router.get('/')
 async def root():

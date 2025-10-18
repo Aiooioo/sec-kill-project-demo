@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from starlette.staticfiles import StaticFiles
 
+from app.rest import lifespan
 import rest.endpoints.flash_sales
 
 app: FastAPI | None = None
@@ -45,6 +46,7 @@ def init_rest_api():
         title='Flash Sales',
         description="Flash Sales demo app",
         version='0.0.1',
+        lifespan=lifespan
     )
 
     app.add_middleware(
