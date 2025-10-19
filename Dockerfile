@@ -23,15 +23,12 @@ ENV UV_DEFAULT_INDEX="https://mirrors.aliyun.com/pypi/simple"
 
 COPY uv.lock pyproject.toml /app/
 
-# 第一次 sync：基于锁文件安装依赖，禁用可编辑模式，冻结版本
+# 基于锁文件安装依赖，禁用可编辑模式，冻结版本
 RUN uv sync --frozen --no-editable
 
 COPY main.py startup.py /app/
 COPY ./static /app/static
 COPY ./app /app/app
-
-# Sync the project
-RUN uv sync --no-editable
 
 RUN uv cache clean
 

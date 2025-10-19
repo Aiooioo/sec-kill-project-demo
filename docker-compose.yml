@@ -17,21 +17,29 @@ services:
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CLUSTER_ID: "Lel53Ee8RvGx4n0cQJ6q9A"
       KAFKA_BROKER_ID: 1
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:29092 --list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # -----------------------------------------------------------------------------------------
   api:
     build: .
     container_name: sec_kill_proj
     depends_on:
-      - redis
-      - kafka
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_healthy
     ports:
       - "8000:8000"
     volumes:
@@ -39,17 +47,18 @@ services:
     command: ["uv", "run", "startup.py"]
     environment:
       REDIS_HOST: redis
-      KAFKA_HOST: kafka:29092
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       PYTHONUNBUFFERED: 1
 
   consumer:
     build: .
     container_name: consumer
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     volumes:
       - ./app:/app/app
     command: ["python", "-u", "app/consumer/order_consumer.py"]
     environment:
-      KAFKA_HOST: kafka:29092
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       PYTHONUNBUFFERED: 1
