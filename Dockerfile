@@ -30,8 +30,6 @@ COPY main.py startup.py /app/
 COPY ./static /app/static
 COPY ./app /app/app
 
-RUN uv lock
-
 # Sync the project
 RUN uv sync --no-editable
 
