@@ -30,10 +30,13 @@ async def purchase(
         result = await flash_sales_service.flash_purchase(request.user_id, request.product_id, request.amount)
 
         if 'err' in result:
+            logger.error(f"flash_purchase api endpoint error: {result['err']}")
             raise HTTPException(status_code=500, detail=result["err"])
 
-        return success_response(data=True, message=result["message"])
+        return success_response(data=result["success"], message=result["message"])
     except HTTPException as e:
+        logger.error(f"flash_purchase api endpoint error: {str(e)}")
         raise e
     except Exception as e:
+        logger.error(f"flash_purchase api endpoint error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

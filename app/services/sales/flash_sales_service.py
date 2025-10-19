@@ -1,37 +1,31 @@
 import logging
 import time
-from cachetools import TTLCache
 
-from app.constant.time import ONE_MINUTE_IN_SECONDS, ONE_HOUR_IN_SECONDS
+from app.constant.time import ONE_HOUR_IN_SECONDS
 from app.services.redis_service import get_redis_service
+from app.services import memory_cache
 from app.services.kafka_producer import send_order_message_async, send_sold_out_message_async
 
 logger = logging.getLogger(__name__)
 
 
+def check_l1_sold_out_state(product_id: int) -> bool:
+    """
+    检查本地内存 L1 缓存中的售罄状态。
+    """
+
+    is_sold_out = memory_cache.memory_cache.get_value(f"product_sold_out_{product_id}")
+
+    if is_sold_out == 'SOLD_OUT':
+        return True
+
+    return False
+
+
 class FlashSalesService:
-    sold_out_cache = TTLCache(maxsize=1000, ttl=ONE_MINUTE_IN_SECONDS * 10)
 
     def __init__(self):
         self.redis_service = get_redis_service()
-
-    def check_l1_sold_out_state(self, product_id: int) -> bool:
-        """
-        检查本地内存 L1 缓存中的售罄状态。
-        """
-
-        is_sold_out = self.sold_out_cache.get(product_id)
-
-        if is_sold_out == 'SOLD_OUT':
-            return True
-
-        return False
-
-    def update_l1_sold_out_state(self, product_id: int):
-        """
-        更新本地内存 L1 缓存中的售罄状态。
-        """
-        self.sold_out_cache[product_id] = 'SOLD_OUT'
 
     def check_and_decr_stock(self, product_id: int, quantity: int):
         """
@@ -76,12 +70,12 @@ class FlashSalesService:
         try:
 
             # Step 1: L1 内存熔断检查
-            if self.check_l1_sold_out_state(product_id):
-                return {"err": "商品已售罄"}
+            if check_l1_sold_out_state(product_id):
+                return {"success": False, "message": "商品已售罄"}
 
             # Step 2: L1.5 Redis 熔断检查
             if self.redis_service.exists(self._get_product_sold_out_key(product_id)):
-                return {"err": "商品已售罄"}
+                return {"success": False, "message": "商品已售罄"}
 
             # Step 3: 尝试库存预扣
             stock_maybe = self.check_and_decr_stock(product_id, quantity)
@@ -112,7 +106,7 @@ class FlashSalesService:
 
                 self.rollback_stock(product_id, quantity)
 
-                return {"err": "商品库存不足"}
+                return {"success": False, "message": "商品库存不足"}
         except Exception as e:
             logger.info(f"Flash purchase error: {e}")
             return {"err": "系统异常"}

@@ -1,4 +1,5 @@
 import logging
+
 from fastapi import FastAPI
 
 from contextlib import asynccontextmanager
@@ -7,6 +8,8 @@ from typing import Generic, TypeVar, Optional
 from app.core.config import AppConfig
 from app.models.http.base_response import SuccessResponse, ErrorResponse
 from app.services.kafka_producer import init_kafka_producer, start_kafka_producer
+from app.services.kafka_consumer import init_kafka_consumer
+from app.services.memory_cache import init_memory_cache
 from app.services.redis_service import get_redis_service
 from app.mock.mock_products import mock_product_inventory
 
@@ -30,7 +33,14 @@ async def lifespan(app: FastAPI):
     init_kafka_producer(kafka_host=AppConfig.KAFKA_BOOTSTRAP_SERVERS)
     await start_kafka_producer()
 
-    # TODO:
+    init_kafka_consumer(
+        kafka_host=AppConfig.KAFKA_BOOTSTRAP_SERVERS,
+        topic="product_status_change_topic",
+        group_id="flash_sales_group"
+    )
+
+    init_memory_cache()
+
     # cache preload
     redis_service = get_redis_service()
     redis_service.preload(mock_product_inventory())

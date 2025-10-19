@@ -21,8 +21,8 @@ class RedisService:
         :param inventories: 商品信息
         """
         for product in inventories:
-            # 设置一个用不过期的 key，存储商品剩余库存
-            self.client.set(self._get_product_stock_key(product.product_id), product.stock)
+            # 设置一个永不过期的 key，存储商品剩余库存
+            self.client.setnx(self._get_product_stock_key(product.product_id), product.stock)
 
     def get(self, key: str, level: str = "redis") -> str:
         return self.client.get(key)
