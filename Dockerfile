@@ -26,7 +26,7 @@ COPY uv.lock pyproject.toml /app/
 # 基于锁文件安装依赖，禁用可编辑模式，冻结版本
 RUN uv sync --frozen --no-editable
 
-COPY main.py startup.py /app/
+COPY main.py startup.py consumer.py /app/
 COPY ./static /app/static
 COPY ./app /app/app
 

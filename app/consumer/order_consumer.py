@@ -10,26 +10,12 @@ from typing import Optional
 from aiokafka import AIOKafkaConsumer
 from app.core.config import AppConfig
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler(os.path.join('logs', 'app.log'), encoding='utf-8')
-    ]
-)
 logger = logging.getLogger(__name__)
-
-logger.info(f"App Start - FlashSalesConsumer v0.0.1")
-logger.info(f"Debug Mode: {os.getenv('DEBUG', 'False').lower() == 'true'}")
-logger.info(f"Log Level: INFO")
-logger.info(f"Log File: {os.path.join('logs', 'app.log')}")
 
 kafka_consumer: Optional[AIOKafkaConsumer] = None
 
 SUCCESSFUL_ORDERS_COUNT = 0
 FAILED_ORDERS_COUNT = 0
-
 
 async def init_kafka_consumer():
     global kafka_consumer
