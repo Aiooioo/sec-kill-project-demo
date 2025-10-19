@@ -1,6 +1,7 @@
 import redis
 from app.core import config
 from app.models.dto.dto_sales import ProductInventory
+from app.constant.time import ONE_HOUR_IN_SECONDS
 
 
 class RedisService:
@@ -20,22 +21,32 @@ class RedisService:
         :param inventories: 商品信息
         """
         for product in inventories:
-            pass
+            # 设置一个用不过期的 key，存储商品剩余库存
+            self.client.set(self._get_product_stock_key(product.product_id), product.stock)
 
     def get(self, key: str, level: str = "redis") -> str:
-        pass
+        return self.client.get(key)
 
-    def set(self, key: str, value: str, expire: int = 3600, level: str = "redis") -> None:
-        pass
+    def set(self, key: str, value: str, expire: int = ONE_HOUR_IN_SECONDS, level: str = "redis") -> None:
+        return self.client.set(key, value, expire)
 
     def invalidate(self, key: str, level: str = "redis") -> None:
         pass
+
+    def exists(self, key: str, level: str = "redis") -> bool:
+        return self.client.get(key) is not None
 
     def reduce(self, key: str, amount: int = 1):
         return self.client.decr(key, amount)
 
     def increase(self, key: str, amount: int = 1):
         return self.client.incr(key, amount)
+
+    def _get_product_stock_key(self, product_id: int):
+        return f'item:{product_id}:stock'
+
+    def _get_product_sold_out_key(self, product_id: int):
+        return f'item:{product_id}:sold_out'
 
 
 def get_redis_service() -> RedisService:

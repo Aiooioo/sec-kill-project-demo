@@ -10,6 +10,8 @@ class AppConfig:
     REDIS_DB = os.getenv("REDIS_DB", 0)
     REDIS_PASSWORD: Optional[str] = os.getenv("REDIS_PASSWORD")
 
+    KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+
     # 日志配置
     LOG_LEVEL: str = os.getenv('LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO')
     LOG_DIR: str = os.getenv('LOG_DIR', 'logs')

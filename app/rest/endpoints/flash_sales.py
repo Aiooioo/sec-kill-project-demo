@@ -21,19 +21,19 @@ async def root():
     }
 
 
-@router.get('/purchase', response_model=SuccessResponse[bool])
+@router.post('/purchase', response_model=SuccessResponse[bool])
 async def purchase(
         request: UserPurchaseRequest = Body(...),
         flash_sales_service: FlashSalesService = Depends(get_flash_sales_service)
 ):
     try:
-        result = flash_sales_service.flash_purchase(request.user_id, request.product_id, request.amount)
+        result = await flash_sales_service.flash_purchase(request.user_id, request.product_id, request.amount)
 
-        if hasattr(result, 'err'):
-            raise HTTPException(status_code=500, detail=result.err)
+        if 'err' in result:
+            raise HTTPException(status_code=500, detail=result["err"])
+
+        return success_response(data=True, message=result["message"])
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-    return success_response(data=True)
